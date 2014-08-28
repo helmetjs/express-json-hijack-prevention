@@ -25,13 +25,18 @@ describe('hijack prevention middleware', function() {
       res.safejson(TO_STRINGIFY);
     });
 
+    result.get('/new-content-type', function(req, res) {
+      res.set('Content-Type', 'text/plain');
+      res.safejson(TO_STRINGIFY);
+    });
+
     return result;
   }
 
   it('prepends "while(1);" by default', function(done) {
     request(app())
       .get('/new')
-      .expect('Content-Type', 'application/json')
+      .expect('Content-Type', /application\/json/)
       .expect('while(1);' + STRINGIFIED)
       .expect(200, done);
   });
@@ -39,30 +44,38 @@ describe('hijack prevention middleware', function() {
   it('can prepend something else', function(done) {
     request(app({ prepend: 'foo' }))
       .get('/new')
-      .expect('Content-Type', 'application/json')
+      .expect('Content-Type', /application\/json/)
       .expect('foo' + STRINGIFIED)
+      .expect(200, done);
+  });
+
+  it('keeps any previously-set Content-Type', function(done) {
+    request(app())
+      .get('/new-content-type')
+      .expect('Content-Type', /text\/plain/)
+      .expect('while(1);' + STRINGIFIED)
       .expect(200, done);
   });
 
   it('keeps the original .json method intact', function(done) {
     request(app())
       .get('/old')
-      .expect('Content-Type', 'application/json')
+      .expect('Content-Type', /application\/json/)
       .expect(STRINGIFIED)
       .expect(200, done);
   });
 
   it('can overwrite the original .json method', function(done) {
-    var app = app({ clobber: true });
-    request(app)
+    var site = app({ clobber: true });
+    request(site)
       .get('/old')
-      .expect('Content-Type', 'application/json')
+      .expect('Content-Type', /application\/json/)
       .expect('while(1);' + STRINGIFIED)
       .expect(200, function(err) {
         if (err) { return done(err); }
-        request(app)
+        request(site)
           .get('/new')
-          .expect('Content-Type', 'application/json')
+          .expect('Content-Type', /application\/json/)
           .expect('while(1);' + STRINGIFIED)
           .expect(200, done);
       });
