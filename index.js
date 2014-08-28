@@ -15,15 +15,11 @@ module.exports = function(options) {
 
   options = options || {};
   var prepend = options.prepend || 'while(1);';
-  var clobber = options.clobber;
 
   var safejson = makeFunction(prepend);
 
   return function(req, res, next) {
     res.safejson = safejson;
-    if (clobber) {
-      res.json = safejson;
-    }
     next();
   };
 

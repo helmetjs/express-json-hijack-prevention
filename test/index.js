@@ -65,20 +65,4 @@ describe('hijack prevention middleware', function() {
       .expect(200, done);
   });
 
-  it('can overwrite the original .json method', function(done) {
-    var site = app({ clobber: true });
-    request(site)
-      .get('/old')
-      .expect('Content-Type', /application\/json/)
-      .expect('while(1);' + STRINGIFIED)
-      .expect(200, function(err) {
-        if (err) { return done(err); }
-        request(site)
-          .get('/new')
-          .expect('Content-Type', /application\/json/)
-          .expect('while(1);' + STRINGIFIED)
-          .expect(200, done);
-      });
-  });
-
 });
